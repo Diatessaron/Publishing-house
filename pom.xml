@@ -11,9 +11,9 @@
     </parent>
 
     <groupId>ru.otus.publishinghouseapplication</groupId>
-    <artifactId>demo</artifactId>
+    <artifactId>PublishingHouse</artifactId>
     <version>0.0.1-SNAPSHOT</version>
-    <name>demo</name>
+    <name>PublishingHouse</name>
 
     <properties>
         <java.version>11</java.version>
