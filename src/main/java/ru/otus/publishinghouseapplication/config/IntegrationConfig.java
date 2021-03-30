@@ -10,20 +10,32 @@ import org.springframework.integration.core.GenericSelector;
 import org.springframework.integration.dsl.IntegrationFlow;
 import org.springframework.integration.dsl.IntegrationFlows;
 import ru.otus.publishinghouseapplication.domain.BookOrder;
-
-import java.util.List;
+import ru.otus.publishinghouseapplication.service.CensorService;
+import ru.otus.publishinghouseapplication.service.ConverterService;
+import ru.otus.publishinghouseapplication.service.PublishingService;
 
 @Configuration
 @IntegrationComponentScan
 @ComponentScan
 @EnableIntegration
 public class IntegrationConfig {
+    private final CensorService censorService;
+    private final ConverterService converterService;
+    private final PublishingService publishingService;
+
+    public IntegrationConfig(CensorService censorService, ConverterService converterService,
+                             PublishingService publishingService) {
+        this.censorService = censorService;
+        this.converterService = converterService;
+        this.publishingService = publishingService;
+    }
+
     @Bean
     public IntegrationFlow publishingFlow() {
         return IntegrationFlows.from("inputChannel")
-                .filter(censorService())
-                .handle("ConverterServiceImpl", "convertBookOrderToBook")
-                .handle("PublishingServiceImpl", "publishBook")
+                .filter(censorFilter())
+                .handle(converterService, "convertBookOrderToBook")
+                .handle(publishingService, "publishBook")
                 .channel("outputChannel")
                 .get();
     }
@@ -39,16 +51,7 @@ public class IntegrationConfig {
     }
 
     @Bean
-    public GenericSelector<BookOrder> censorService() {
-        final List<String> prohibitedAuthors = List.of("Abelard", "Ovid", "Sappho", "Galileo Galilei");
-
-        return bookOrder -> {
-            if (prohibitedAuthors.stream().anyMatch(a -> bookOrder.getAuthor().equalsIgnoreCase(a))){
-                System.out.println(bookOrder.getAuthor() + " is prohibited from publishing");
-                return false;
-            }
-
-            return true;
-        };
+    public GenericSelector<BookOrder> censorFilter() {
+        return censorService::checkForProhibitedAuthors;
     }
 }
